@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Walkie Talkie - CON LLAMADA Y MANOS LIBRES</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+        }
+        .walkie {
+            background: #2c2c3e;
+            border-radius: 45px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.5);
+        }
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #2ed573;
+            font-size: .9rem;
+            margin-bottom: 20px;
+        }
+        .ids-panel {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .id-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .id-label {
+            color: #888;
+            font-size: 1rem;
+        }
+        .id-value {
+            color: #2ed573;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1.2rem;
+            word-break: break-all;
+            text-align: right;
+        }
+        .walkies {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .walkie-card {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: #1e1e2a;
+            border-radius: 25px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all .2s;
+        }
+        .walkie-card.selected {
+            border-color: #2ed573;
+            background: #2ed57322;
+        }
+        .walkie-num {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .walkie-status {
+            font-size: .75rem;
+            margin-top: 6px;
+        }
+        .walkie-id-peque {
+            font-size: .85rem;
+            color: #2ed573;
+            margin-top: 6px;
+            font-weight: bold;
+            word-break: break-all;
+        }
+        .botonera {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .botonera button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            font-size: 1rem;
+        }
+        .botonera button:active {
+            transform: scale(.97);
+        }
+        .reset {
+            background: #ffa502;
+        }
+        .modo {
+            background: #2ed573;
+        }
+        .limpiar {
+            background: #e74c3c;
+        }
+        .llamar {
+            background: #9b59b6;
+        }
+        .manos-libres {
+            background: #3498db;
+        }
+        .manos-libres.activo {
+            background: #2ed573;
+            box-shadow: 0 0 10px #2ed573;
+        }
+        .auto-status {
+            background: #1e1e2a;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: .9rem;
+            text-align: center;
+        }
+        .auto-status span {
+            color: #2ed573;
+            font-weight: bold;
+        }
+        .ptt-btn {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: radial-gradient(#34495e, #2c3e50);
+            border: 5px solid #ecf0f1;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            transition: transform 0.05s linear;
+        }
+        .ptt-btn:active {
+            transform: scale(.96);
+        }
+        .ptt-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .estado {
+            text-align: center;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: .9rem;
+        }
+        .verde {
+            background: #2ed57322;
+            color: #2ed573;
+        }
+        .rojo {
+            background: #ff475722;
+            color: #ff4757;
+        }
+        .amarillo {
+            background: #ffa50222;
+            color: #ffa502;
+        }
+        .info {
+            font-size: .8rem;
+            color: #888;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .info a {
+            color: #2ed573;
+            text-decoration: none;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ed573;
+            color: #0a0a0f;
+            padding: 10px 20px;
+            border-radius: 35px;
+            font-size: .9rem;
+            z-index: 1000;
+            font-weight: bold;
+            white-space: nowrap;
+            max-width: 90vw;
+            white-space: normal;
+            text-align: center;
+            pointer-events: none;
+        }
+        .chat-area {
+            margin-top: 20px;
+            border-top: 1px solid #2c2c3e;
+            padding-top: 15px;
+        }
+        .chat-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .chat-header button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: .9rem;
+        }
+        .btn-voz-activo {
+            background: #2ed573;
+            color: white;
+        }
+        .btn-texto-activo {
+            background: #ffa502;
+            color: white;
+        }
+        .chat-mensajes {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 12px;
+            height: 160px;
+            overflow-y: auto;
+            font-size: .9rem;
+        }
+        .mensaje-propio {
+            text-align: right;
+            margin: 8px 0;
+            color: #2ed573;
+        }
+        .mensaje-otro {
+            text-align: left;
+            margin: 8px 0;
+            color: #ffa502;
+        }
+        .mensaje-nombre {
+            font-weight: bold;
+            font-size: .8rem;
+        }
+        .input-texto {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .input-texto input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: #1e1e2a;
+            color: white;
+            font-size: 1rem;
+        }
+        .input-texto input:focus {
+            outline: none;
+            border: 1px solid #2ed573;
+        }
+        .input-texto button {
+            background: #2ed573;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            color: #0a0a0f;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .countdown-timer {
+            font-family: monospace;
+            font-size: 1rem;
+            background: #0a0a0f;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+        }
+        .notificacion-modo {
+            animation: parpadear 1s ease-in-out;
+        }
+        @keyframes parpadear {
+            0%, 100% { opacity: 1; background: transparent; }
+            50% { opacity: 0.7; background: #2ed57333; }
+        }
+        .conexion-info {
+            background: #0a0a0f;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: .8rem;
+            text-align: center;
+            color: #ffa502;
+        }
+        .keep-alive-badge {
+            background: #2ed57333;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-top: 8px;
+            color: #2ed573;
+        }
+        @media (max-width: 480px) {
+            .walkie { padding: 18px; }
+            .ptt-btn { width: 140px; height: 140px; font-size: 1rem; }
+            .botonera button { padding: 10px; font-size: .9rem; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="walkie">
+        <h1>📞 WALKIE <span style="color:#2ed573">EXTERNO</span></h1>
+        <div class="subtitle">🌍 Conéctate con任何人 en cualquier red</div>
+
+        <div class="ids-panel">
+            <div class="id-row"><span class="id-label">🎭 Mi ID (compartir):</span><span class="id-value" id="miIdPropio">---</span></div>
+            <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value" id="otroIdPropio">---</span></div>
+        </div>
+
+        <div class="auto-status">
+            🔄 Mantenimiento automático: <span id="autoStatusText">ACTIVO</span><br>
+            ⏱️ Reinicio automático en: <span id="countdownTimer">--:--</span>
+            <div class="keep-alive-badge" id="keepAliveStatus">🎵 Mantenimiento activo: ON</div>
+        </div>
+
+        <div class="walkies">
+            <div class="walkie-card selected" id="cardMi"><div class="walkie-num">🎭 YO</div><div class="walkie-status" id="statusMi">Esperando...</div><div class="walkie-id-peque" id="miIdPeque">---</div></div>
+            <div class="walkie-card" id="cardOtro"><div class="walkie-num">👥 OTRO</div><div class="walkie-status" id="statusOtro">Esperando...</div><div class="walkie-id-peque" id="otroIdPeque">---</div></div>
+        </div>
+
+        <div class="botonera">
+            <button id="cambiarBtn" class="reset">🔄 CAMBIAR IDs</button>
+            <button id="modoBtn" class="modo">📻 MODO PTT</button>
+            <button id="limpiarBtn" class="limpiar">🧹 LIMPIAR MANUAL</button>
+            <button id="llamarBtn" class="llamar">📞 LLAMAR</button>
+            <button id="manosLibresBtn" class="manos-libres">🔊 MANOS LIBRES</button>
+        </div>
+
+        <div id="ptt" class="ptt-btn disabled">🎧<br>CONFIGURA<br>TUS IDs</div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <button id="btnVoz" class="btn-voz-activo">🎤 MODO VOZ</button>
+                <button id="btnTexto">💬 MODO TEXTO</button>
+            </div>
+            <div id="panelChat" style="display: none;">
+                <div class="chat-mensajes" id="chatMensajes"><div style="color:#888;text-align:center;">💬 Los mensajes aparecerán aquí</div></div>
+                <div class="input-texto"><input type="text" id="mensajeInput" placeholder="Escribe un mensaje..." autocomplete="off"><button id="enviarBtn">📨 ENVIAR</button></div>
+            </div>
+        </div>
+
+        <div id="estado" class="estado rojo">⚡ Haz clic en "CAMBIAR IDs" para empezar</div>
+        
+        <div class="conexion-info" id="conexionInfo">
+            🌐 Usando servidores internacionales - Compatible con todas las redes
+        </div>
+        
+        <div class="info">
+            💡 <strong>Conexión externa:</strong> Comparte tu ID con tu amigo, él debe poner tu ID en su "ID del amigo"<br>
+            📌 Usando PeerJS Cloud + TURN servers para máxima compatibilidad<br>
+            🔊 <strong>Sonido automático:</strong> Cuando envías un mensaje, suena "sonido.wav" en el otro dispositivo<br>
+            📞 <strong>Notón de llamada:</strong> Botón "LLAMAR" reproduce "sonido2.wav" en el otro dispositivo<br>
+            🎵 <strong>Mantenimiento activo:</strong> Sonido fantasma ultrasónico para evitar suspensión (inaudible para humanos)<br>
+            🔥 <strong>Manos libres:</strong> Activa el altavoz para escuchar sin auriculares
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+    (function(){
+        // ============ CONFIGURACIÓN MEJORADA PARA CONEXIÓN EXTERNA (MÓVILES) ============
+        const ICE_SERVERS = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                { urls: 'stun:stun.cloudflare.com:3478' },
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:3478',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
+            ],
+            iceCandidatePoolSize: 10,
+            iceTransportPolicy: 'all'
+        };
+        
+        const PEER_CONFIG = {
+            host: '0.peerjs.com',
+            port: 443,
+            secure: true,
+            config: ICE_SERVERS,
+            debug: 2
+        };
+        
+        // ============ VARIABLES GLOBALES ============
+        let miId = "", idDestino = "", peer = null, stream = null, llamada = null, audio = null;
+        let conectado = false, hablando = false, modoPtt = true;
+        let dataConnection = null;
+        let modoActual = "voz";
+        let cambioAutomaticoHabilitado = true;
+        let manosLibresActivo = false;
+        
+        // Variables para el sistema de auto-mantenimiento
+        let tiempoInactividad = 0;
+        let intervaloInactividad = null;
+        let segundosParaReconexion = 90;
+        let ultimaActividad = Date.now();
+        let autoMantenimientoActivo = true;
+        let reconexionProgramada = false;
+        let reconectando = false;
+        let reintentosConexion = 0;
+        let maxReintentos = 5;
+        
+        // ============ VARIABLES PARA SONIDO FANTASMA (KEEP ALIVE) ============
+        let ghostAudioContext = null;
+        let ghostAudioSource = null;
+        let ghostInterval = null;
+        let keepAliveActive = false;
+        let silentOscillator = null;
+        
+        // ============ FUNCIÓN DE SONIDO FANTASMA (ULTRASÓNICO / SILENCIOSO) ============
+        async function iniciarSonidoFantasma() {
+            if (keepAliveActive) return;
+            
+            try {
+                console.log("🎵 Iniciando sonido fantasma para mantener la página activa...");
+                
+                if (!ghostAudioContext) {
+                    ghostAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                if (ghostAudioContext.state === 'suspended') {
+                    await ghostAudioContext.resume();
+                }
+                
+                const oscillator = ghostAudioContext.createOscillator();
+                const gain = ghostAudioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 19000;
+                gain.gain.value = 0.001;
+                
+                oscillator.connect(gain);
+                gain.connect(ghostAudioContext.destination);
+                oscillator.start();
+                
+                silentOscillator = oscillator;
+                
+                ghostInterval = setInterval(() => {
+                    if (ghostAudioContext && keepAliveActive) {
+                        try {
+                            if (ghostAudioContext.state === 'suspended') {
+                                ghostAudioContext.resume();
+                            }
+                            
+                            const shortBeep = ghostAudioContext.createOscillator();
+                            const beepGain = ghostAudioContext.createGain();
+                            shortBeep.type = 'sine';
+                            shortBeep.frequency.value = 18000;
+                            beepGain.gain.value = 0.0005;
+                            shortBeep.connect(beepGain);
+                            beepGain.connect(ghostAudioContext.destination);
+                            shortBeep.start();
+                            shortBeep.stop(ghostAudioContext.currentTime + 0.05);
+                            
+                            console.log("🔊 Ping ultrasónico de mantenimiento");
+                        } catch(e) {
+                            console.log("Ping fantasma falló:", e);
+                        }
+                    }
+                }, 15000);
+                
+                keepAliveActive = true;
+                
+                const keepAliveSpan = document.getElementById('keepAliveStatus');
+                if (keepAliveSpan) {
+                    keepAliveSpan.innerHTML = '🎵 Mantenimiento activo: ON (ultrasónico)';
+                    keepAliveSpan.style.background = '#2ed57355';
+                }
+                
+                mostrarToast("🎵 Modo anti-suspensión activado");
+                console.log("✅ Sonido fantasma activo");
+                
+            } catch(e) {
+                console.error("❌ Error iniciando sonido fantasma:", e);
+                iniciarFallbackKeepAlive();
+            }
+        }
+        
+        function iniciarFallbackKeepAlive() {
+            console.log("🔄 Usando fallback de mantenimiento (sin audio)");
+            ghostInterval = setInterval(() => {
+                registrarActividad();
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }, 10000);
+            keepAliveActive = true;
+            
+            const keepAliveSpan = document.getElementById('keepAliveStatus');
+            if (keepAliveSpan) {
+                keepAliveSpan.innerHTML = '🎵 Mantenimiento activo: ON (fallback)';
+                keepAliveSpan.style.background = '#ffa50255';
+            }
+        }
+        
+        function detenerSonidoFantasma() {
+            if (!keepAliveActive) return;
+            
+            console.log("🔇 Deteniendo sonido fantasma...");
+            
+            if (ghostInterval) {
+                clearInterval(ghostInterval);
+                ghostInterval = null;
+            }
+            
+            if (silentOscillator) {
+                try {
+                    silentOscillator.stop();
+                    silentOscillator.disconnect();
+                } catch(e) {}
+                silentOscillator = null;
+            }
+            
+            if (ghostAudioContext) {
+                try {
+                    ghostAudioContext.suspend();
+                } catch(e) {}
+            }
+            
+            keepAliveActive = false;
+            
+            const keepAliveSpan = document.getElementById('keepAliveStatus');
+            if (keepAliveSpan) {
+                keepAliveSpan.innerHTML = '🎵 Mantenimiento activo: OFF';
+                keepAliveSpan.style.background = '#2ed57333';
+            }
+        }
+        
+        // ============ FUNCIÓN DE SONIDO NORMAL (sonido.wav) ============
+        function reproducirSonidoLocal() {
+            try {
+                console.log("🔊 Reproduciendo sonido.wav");
+                
+                if (ghostAudioContext && ghostAudioContext.state === 'suspended') {
+                    ghostAudioContext.resume();
+                }
+                
+                const audioElement = new Audio('sonido.wav');
+                audioElement.volume = 1.0;
+                audioElement.play().catch(e => {
+                    console.warn("Audio directo falló, usando Web Audio:", e);
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const audioContext = new AudioContext();
+                    
+                    fetch('sonido.wav')
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                        .then(buffer => {
+                            const source = audioContext.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(audioContext.destination);
+                            source.start(0);
+                            audioContext.resume();
+                        })
+                        .catch(err => console.error("Error reproduciendo sonido:", err));
+                });
+            } catch(e) {
+                console.error("Error reproduciendo sonido:", e);
+            }
+        }
+        
+        // ============ FUNCIÓN PARA sonido2.wav (notón de llamada) ============
+        function reproducirSonidoLlamada() {
+            try {
+                console.log("📞 Reproduciendo sonido2.wav (notón de llamada)");
+                
+                if (ghostAudioContext && ghostAudioContext.state === 'suspended') {
+                    ghostAudioContext.resume();
+                }
+                
+                const audioElement = new Audio('sonido2.wav');
+                audioElement.volume = 1.0;
+                audioElement.play().catch(e => {
+                    console.warn("Audio directo falló, usando Web Audio:", e);
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const audioContext = new AudioContext();
+                    
+                    fetch('sonido2.wav')
+                        .then(response => response.arrayBuffer())
+                        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                        .then(buffer => {
+                            const source = audioContext.createBufferSource();
+                            source.buffer = buffer;
+                            source.connect(audioContext.destination);
+                            source.start(0);
+                            audioContext.resume();
+                        })
+                        .catch(err => console.error("Error reproduciendo sonido2:", err));
+                });
+            } catch(e) {
+                console.error("Error reproduciendo sonido2:", e);
+            }
+        }
+        
+        // ============ FUNCIÓN MANOS LIBRES (CORREGIDA Y FUNCIONAL) ============
+        function toggleManosLibres() {
+            manosLibresActivo = !manosLibresActivo;
+            const btn = document.getElementById('manosLibresBtn');
+            
+            if (manosLibresActivo) {
+                btn.classList.add('activo');
+                btn.innerHTML = '🔊 MANOS LIBRES ON';
+                mostrarToast("🔊 Manos libres ACTIVADO - Sonido por altavoz");
+                
+                // Redirigir audio actual al altavoz si hay una llamada activa
+                if (audio && audio.srcObject) {
+                    const currentStream = audio.srcObject;
+                    audio.pause();
+                    audio.srcObject = null;
+                    const newAudio = new Audio();
+                    newAudio.srcObject = currentStream;
+                    newAudio.autoplay = true;
+                    newAudio.volume = 1.0;
+                    audio = newAudio;
+                    mostrarToast("🔊 Audio cambiado a altavoz");
+                }
+            } else {
+                btn.classList.remove('activo');
+                btn.innerHTML = '🔊 MANOS LIBRES';
+                mostrarToast("🔊 Manos libres DESACTIVADO - Sonido por auricular");
+                
+                // Revertir a modo normal
+                if (audio && audio.srcObject) {
+                    const currentStream = audio.srcObject;
+                    audio.pause();
+                    audio.srcObject = null;
+                    const newAudio = new Audio();
+                    newAudio.srcObject = currentStream;
+                    newAudio.autoplay = true;
+                    audio = newAudio;
+                }
+            }
+            
+            registrarActividad();
+        }
+        
+        // ============ FUNCIÓN PARA ENVIAR NOTÓN DE LLAMADA ============
+        function enviarLlamada() {
+            if (!idDestino) {
+                mostrarToast('⚠️ Configura destinatario primero');
+                return;
+            }
+            
+            if (!conectado) {
+                mostrarToast('⚠️ Espera a estar conectado');
+                return;
+            }
+            
+            registrarActividad();
+            mostrarToast(`📞 Enviando notón de llamada a ${idDestino}...`);
+            
+            if (dataConnection && dataConnection.open) {
+                dataConnection.send({ type: 'llamada', desde: miId, timestamp: Date.now() });
+                reproducirSonidoLlamada();
+                mostrarToast(`✅ Notón enviado a ${idDestino}`);
+            } else {
+                mostrarToast('🔄 Estableciendo canal de datos...');
+                establecerConexionDatos();
+                setTimeout(() => {
+                    if (dataConnection && dataConnection.open) {
+                        dataConnection.send({ type: 'llamada', desde: miId });
+                        reproducirSonidoLlamada();
+                        mostrarToast(`✅ Notón enviado a ${idDestino}`);
+                    } else {
+                        mostrarToast('❌ No se pudo enviar la llamada');
+                    }
+                }, 1500);
+            }
+        }
+        
+        // ============ FUNCIONES UTILITY ============
+        function mostrarToast(msg) { 
+            let toast = document.createElement('div'); 
+            toast.className = 'toast'; 
+            toast.textContent = msg; 
+            document.body.appendChild(toast); 
+            setTimeout(() => toast.remove(), 3000); 
+        }
+        
+        function registrarActividad() {
+            ultimaActividad = Date.now();
+            tiempoInactividad = 0;
+            reconexionProgramada = false;
+            const autoSpan = document.getElementById('autoStatusText');
+            if(autoSpan) {
+                autoSpan.innerHTML = 'ACTIVO';
+                autoSpan.style.color = '#2ed573';
+            }
+        }
+        
+        // ============ FUNCIONES DE MODO ============
+        function cambiarATextoAutomatico(origen) {
+            if (!cambioAutomaticoHabilitado) return;
+            if (modoActual === "texto") return;
+            
+            cambioAutomaticoHabilitado = false;
+            modoActual = "texto";
+            
+            const btnVoz = document.getElementById('btnVoz');
+            const btnTexto = document.getElementById('btnTexto');
+            const pttDiv = document.getElementById('ptt');
+            const panelChat = document.getElementById('panelChat');
+            
+            if(btnVoz) btnVoz.style.background = '#1e1e2a';
+            if(btnTexto) btnTexto.style.background = '#ffa502';
+            if(pttDiv) pttDiv.style.display = 'none';
+            if(panelChat) panelChat.style.display = 'block';
+            
+            const chatArea = document.querySelector('.chat-area');
+            if(chatArea) chatArea.classList.add('notificacion-modo');
+            setTimeout(() => {
+                if(chatArea) chatArea.classList.remove('notificacion-modo');
+            }, 1000);
+            
+            mostrarToast(`📱 Mensaje de ${origen} - Cambiando a modo texto`);
+            
+            if (hablando) {
+                detenerLlamada();
+                hablando = false;
+                const pttDiv2 = document.getElementById('ptt');
+                if(pttDiv2) {
+                    pttDiv2.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                    pttDiv2.innerHTML = '🎤<br>MANTÉN PTT';
+                }
+            }
+            
+            setTimeout(() => { cambioAutomaticoHabilitado = true; }, 500);
+            registrarActividad();
+        }
+        
+        function cambiarAVozManual() {
+            if (modoActual === "voz") return;
+            
+            modoActual = "voz";
+            const btnVoz = document.getElementById('btnVoz');
+            const btnTexto = document.getElementById('btnTexto');
+            const pttDiv = document.getElementById('ptt');
+            const panelChat = document.getElementById('panelChat');
+            
+            if(btnVoz) btnVoz.style.background = '#2ed573';
+            if(btnTexto) btnTexto.style.background = '#1e1e2a';
+            if(pttDiv) pttDiv.style.display = 'flex';
+            if(panelChat) panelChat.style.display = 'none';
+            
+            mostrarToast(`🎤 Cambiado a modo voz`);
+            registrarActividad();
+        }
+        
+        function cambiarModo(modo) {
+            if (modo === 'voz') {
+                cambiarAVozManual();
+            } else {
+                if (modoActual !== 'texto') {
+                    cambioAutomaticoHabilitado = false;
+                    modoActual = 'texto';
+                    const btnVoz = document.getElementById('btnVoz');
+                    const btnTexto = document.getElementById('btnTexto');
+                    const pttDiv = document.getElementById('ptt');
+                    const panelChat = document.getElementById('panelChat');
+                    
+                    if(btnVoz) btnVoz.style.background = '#1e1e2a';
+                    if(btnTexto) btnTexto.style.background = '#ffa502';
+                    if(pttDiv) pttDiv.style.display = 'none';
+                    if(panelChat) panelChat.style.display = 'block';
+                    
+                    setTimeout(() => { cambioAutomaticoHabilitado = true; }, 500);
+                    mostrarToast(`💬 Cambiado a modo texto manualmente`);
+                }
+            }
+            registrarActividad();
+        }
+        
+        // ============ FUNCIONES DE AUDIO Y LLAMADA ============
+        async function iniciarLlamada() {
+            if(!peer || !idDestino) return false;
+            if(!stream) {
+                try { 
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+                    stream.getAudioTracks().forEach(t => t.enabled = false); 
+                    console.log("✅ Stream de audio obtenido");
+                } catch(e) { 
+                    mostrarToast('🎤 Permite el micrófono para usar voz'); 
+                    console.error("Error obteniendo micrófono:", e);
+                    return false; 
+                }
+            }
+            stream.getAudioTracks().forEach(t => t.enabled = true);
+            if(llamada) {
+                try { llamada.close(); } catch(e) {}
+            }
+            try {
+                console.log("Iniciando llamada a:", idDestino);
+                llamada = peer.call(idDestino, stream);
+                llamada.on('error', (err) => {
+                    console.error("Error en llamada:", err);
+                    mostrarToast("❌ Error en llamada de voz");
+                });
+                registrarActividad();
+                return true;
+            } catch(e) {
+                console.error("Error al iniciar llamada:", e);
+                return false;
+            }
+        }
+        
+        function detenerLlamada() { 
+            if(stream) stream.getAudioTracks().forEach(t => t.enabled = false); 
+            if(llamada) { 
+                try { llamada.close(); } catch(e) {}
+                llamada = null; 
+            } 
+        }
+        
+        // ============ FUNCIONES DE MENSAJERÍA ============
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        function agregarMensajeChat(remitente, texto, esMio = false) {
+            registrarActividad();
+            
+            if (!esMio && cambioAutomaticoHabilitado && modoActual !== "texto") {
+                cambiarATextoAutomatico(remitente);
+            }
+            
+            const chatDiv = document.getElementById('chatMensajes');
+            if(!chatDiv) return;
+            
+            if(chatDiv.children.length === 1 && chatDiv.children[0].innerText.includes("Los mensajes aparecerán aquí")) {
+                chatDiv.innerHTML = "";
+            }
+            const msgDiv = document.createElement('div');
+            msgDiv.className = esMio ? 'mensaje-propio' : 'mensaje-otro';
+            msgDiv.innerHTML = `<div class="mensaje-nombre">${escapeHtml(remitente)}:</div><div>${escapeHtml(texto)}</div>`;
+            chatDiv.appendChild(msgDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        
+        function enviarMensajeTexto() {
+            const input = document.getElementById('mensajeInput');
+            if(!input) return;
+            const texto = input.value.trim();
+            if(!texto) { mostrarToast('📝 Escribe un mensaje'); return; }
+            if(!idDestino) { mostrarToast('⚠️ Configura destinatario'); return; }
+            
+            registrarActividad();
+            
+            if (modoActual !== "texto") {
+                cambiarATextoAutomatico("Yo");
+            }
+            
+            if (dataConnection && dataConnection.open) {
+                dataConnection.send({ type: 'texto', desde: miId, texto: texto });
+                dataConnection.send({ type: 'sonido', desde: miId, timestamp: Date.now() });
+                agregarMensajeChat(miId, texto, true);
+                input.value = '';
+                mostrarToast(`📨 Enviado a ${idDestino} con sonido`);
+            } else {
+                mostrarToast('🔄 Estableciendo canal...');
+                establecerConexionDatos();
+                setTimeout(() => {
+                    if (dataConnection && dataConnection.open) {
+                        dataConnection.send({ type: 'texto', desde: miId, texto: texto });
+                        dataConnection.send({ type: 'sonido', desde: miId });
+                        agregarMensajeChat(miId, texto, true);
+                        input.value = '';
+                        mostrarToast(`📨 Enviado a ${idDestino} con sonido`);
+                    } else {
+                        mostrarToast('❌ Canal no disponible, reintenta');
+                    }
+                }, 1500);
+            }
+        }
+        
+        function establecerConexionDatos() {
+            if (!peer || !idDestino) return;
+            if (dataConnection && dataConnection.open) return;
+            if (dataConnection && dataConnection.peer === idDestino) {
+                try { dataConnection.close(); } catch(e) {}
+                dataConnection = null;
+            }
+            
+            try {
+                console.log("Estableciendo DataConnection a:", idDestino);
+                dataConnection = peer.connect(idDestino, { reliable: true, serialization: 'json' });
+                
+                dataConnection.on('open', () => {
+                    console.log('✅ DataConnection abierta con', idDestino);
+                    mostrarToast('📡 Canal de mensajes listo');
+                    dataConnection.send({ type: 'handshake', desde: miId });
+                    registrarActividad();
+                    reintentosConexion = 0;
+                });
+                
+                dataConnection.on('data', (data) => {
+                    console.log('Data recibida:', data.type);
+                    if (data.type === 'texto') {
+                        agregarMensajeChat(data.desde, data.texto, false);
+                        mostrarToast(`📨 Mensaje de ${data.desde}`);
+                        registrarActividad();
+                    } else if (data.type === 'handshake') {
+                        console.log('Handshake recibido de', data.desde);
+                    } else if (data.type === 'sonido') {
+                        console.log(`🔊 Comando de sonido recibido desde: ${data.desde}`);
+                        reproducirSonidoLocal();
+                        registrarActividad();
+                    } else if (data.type === 'llamada') {
+                        console.log(`📞 Notón de llamada recibido desde: ${data.desde}`);
+                        mostrarToast(`📞 ${data.desde} te está llamando!`);
+                        reproducirSonidoLlamada();
+                        registrarActividad();
+                    }
+                });
+                
+                dataConnection.on('error', (err) => { 
+                    console.error('DataConnection error:', err); 
+                    dataConnection = null;
+                    setTimeout(() => {
+                        if(reintentosConexion < maxReintentos) {
+                            reintentosConexion++;
+                            establecerConexionDatos();
+                        }
+                    }, 5000); 
+                });
+                
+                dataConnection.on('close', () => { 
+                    console.log("DataConnection cerrada");
+                    dataConnection = null; 
+                    setTimeout(() => establecerConexionDatos(), 3000); 
+                });
+            } catch(e) {
+                console.error("Error al establecer conexión de datos:", e);
+                setTimeout(() => establecerConexionDatos(), 3000);
+            }
+        }
+        
+        // ============ FUNCIONES DE CONEXIÓN PEER ============
+        function actualizarUI() {
+            const miIdPropio = document.getElementById('miIdPropio');
+            const otroIdPropio = document.getElementById('otroIdPropio');
+            const miIdPeque = document.getElementById('miIdPeque');
+            const otroIdPeque = document.getElementById('otroIdPeque');
+            const statusMi = document.getElementById('statusMi');
+            
+            if(miIdPropio) miIdPropio.innerText = miId || "❌";
+            if(otroIdPropio) otroIdPropio.innerText = idDestino || "❌";
+            if(miIdPeque) miIdPeque.innerText = miId || "---";
+            if(otroIdPeque) otroIdPeque.innerText = idDestino || "---";
+            if(statusMi && miId) statusMi.innerHTML = conectado ? '🟢 Conectado' : '🟡 Conectando...';
+            
+            const statusOtro = document.getElementById('statusOtro');
+            if(statusOtro && idDestino) statusOtro.innerHTML = `🎯 ${idDestino}`;
+        }
+        
+        function actualizarEstadoConexion(texto, tipo) {
+            const estadoDiv = document.getElementById('estado');
+            if(estadoDiv) {
+                estadoDiv.innerHTML = texto;
+                estadoDiv.className = `estado ${tipo}`;
+            }
+        }
+        
+        function conectarPeer(miID, otroID) {
+            if(reconectando) return;
+            reconectando = true;
+            
+            if (peer) { 
+                try { peer.destroy(); } catch(e) {} 
+                peer = null; 
+            }
+            
+            miId = miID; 
+            idDestino = otroID; 
+            conectado = false; 
+            hablando = false;
+            actualizarUI();
+            mostrarToast(`🔌 Conectando como "${miId}"...`);
+            actualizarEstadoConexion(`🔄 Conectando como "${miId}"...`, 'amarillo');
+            
+            const pttBtn = document.getElementById('ptt');
+            if(pttBtn) pttBtn.classList.add('disabled');
+            
+            try {
+                console.log("Creando Peer con ID:", miId);
+                peer = new Peer(miId, PEER_CONFIG);
+                
+                peer.on('open', (id) => {
+                    console.log("Peer abierto con ID:", id);
+                    conectado = true;
+                    reconectando = false;
+                    reintentosConexion = 0;
+                    actualizarEstadoConexion(`✅ Conectado como "${miId}"`, 'verde');
+                    if(pttBtn) pttBtn.classList.remove('disabled');
+                    mostrarToast(`✅ Conectado como "${miId}"!`);
+                    actualizarUI();
+                    establecerConexionDatos();
+                    registrarActividad();
+                    
+                    const conexionInfo = document.getElementById('conexionInfo');
+                    if(conexionInfo) {
+                        conexionInfo.innerHTML = '✅ Conectado al servidor global - Listo para recibir llamadas';
+                        conexionInfo.style.color = '#2ed573';
+                    }
+                    
+                    iniciarSonidoFantasma();
+                });
+                
+                peer.on('connection', (conn) => {
+                    console.log('Conexión entrante de', conn.peer);
+                    if (dataConnection) { 
+                        try { dataConnection.close(); } catch(e) {} 
+                    }
+                    dataConnection = conn;
+                    dataConnection.on('open', () => { 
+                        console.log('DataConnection entrante abierta desde', conn.peer); 
+                        dataConnection.send({ type: 'handshake', desde: miId }); 
+                        registrarActividad();
+                        mostrarToast(`📡 ${conn.peer} conectado para mensajes`);
+                    });
+                    dataConnection.on('data', (data) => { 
+                        if (data.type === 'texto') { 
+                            agregarMensajeChat(data.desde, data.texto, false); 
+                            mostrarToast(`📨 Mensaje de ${data.desde}`); 
+                            registrarActividad();
+                        } else if (data.type === 'handshake') {
+                            console.log('Handshake recibido de', data.desde);
+                        } else if (data.type === 'sonido') {
+                            console.log(`🔊 Comando de sonido recibido desde: ${data.desde}`);
+                            reproducirSonidoLocal();
+                            registrarActividad();
+                        } else if (data.type === 'llamada') {
+                            console.log(`📞 Notón de llamada recibido desde: ${data.desde}`);
+                            mostrarToast(`📞 ${data.desde} te está llamando!`);
+                            reproducirSonidoLlamada();
+                            registrarActividad();
+                        }
+                    });
+                    dataConnection.on('close', () => {
+                        console.log("DataConnection entrante cerrada");
+                        dataConnection = null;
+                        setTimeout(() => establecerConexionDatos(), 3000);
+                    });
+                });
+                
+                peer.on('call', (call) => { 
+                    console.log("Llamada entrante de:", call.peer);
+                    if (stream) { 
+                        call.answer(stream); 
+                        call.on('stream', (s) => { 
+                            if (audio) { 
+                                audio.pause(); 
+                                audio.srcObject = null; 
+                            } 
+                            audio = new Audio(); 
+                            audio.srcObject = s; 
+                            audio.autoplay = true;
+                            
+                            if (manosLibresActivo) {
+                                setTimeout(() => {
+                                    const currentStream = audio.srcObject;
+                                    if (currentStream) {
+                                        audio.pause();
+                                        audio.srcObject = null;
+                                        const newAudio = new Audio();
+                                        newAudio.srcObject = currentStream;
+                                        newAudio.autoplay = true;
+                                        newAudio.volume = 1.0;
+                                        audio = newAudio;
+                                        console.log("🔊 Manos libres aplicado a llamada entrante");
+                                    }
+                                }, 100);
+                            }
+                            
+                            mostrarToast(`🎧 Llamada de voz entrante de ${call.peer}`);
+                        }); 
+                        call.on('close', () => {
+                            console.log("Llamada cerrada");
+                        });
+                    } else {
+                        console.log("No hay stream para responder llamada");
+                    }
+                });
+                
+                peer.on('error', (err) => { 
+                    console.error('Peer error:', err);
+                    reconectando = false;
+                    if (err.type === 'unavailable-id') {
+                        mostrarToast(`❌ ID "${miId}" ya está en uso, elige otro`);
+                        actualizarEstadoConexion(`❌ ID "${miId}" ocupado`, 'rojo');
+                    } else if (err.type === 'network') {
+                        mostrarToast(`⚠️ Problema de red, reintentando...`);
+                        actualizarEstadoConexion(`⚠️ Problema de red`, 'amarillo');
+                        setTimeout(() => {
+                            if(miId && idDestino && !conectado) {
+                                conectarPeer(miId, idDestino);
+                            }
+                        }, 5000);
+                    } else {
+                        mostrarToast(`⚠️ Error: ${err.type || 'conexión'}`);
+                    }
+                });
+                
+                peer.on('disconnected', () => { 
+                    console.log("Peer desconectado");
+                    conectado = false; 
+                    mostrarToast('⚠️ Desconectado del servidor. Reconectando...');
+                    actualizarEstadoConexion('⚠️ Desconectado, reconectando...', 'amarillo');
+                    if(pttBtn) pttBtn.classList.add('disabled');
+                    
+                    const conexionInfo = document.getElementById('conexionInfo');
+                    if(conexionInfo) {
+                        conexionInfo.innerHTML = '⚠️ Desconectado - Reintentando conexión...';
+                        conexionInfo.style.color = '#ffa502';
+                    }
+                    
+                    setTimeout(() => {
+                        if(peer && !conectado && miId && idDestino) {
+                            peer.reconnect();
+                        }
+                    }, 3000);
+                });
+                
+                peer.on('close', () => {
+                    console.log("Peer cerrado");
+                    conectado = false;
+                    reconectando = false;
+                });
+            } catch(e) {
+                console.error("Error creando peer:", e);
+                reconectando = false;
+                mostrarToast("Error de conexión, reintenta");
+                actualizarEstadoConexion("❌ Error de conexión", 'rojo');
+            }
+        }
+        
+        // ============ LIMPIEZA Y MANTENIMIENTO ============
+        function limpiezaTotalAutomatica() {
+            if (!autoMantenimientoActivo || reconectando) return;
+            
+            console.log("Iniciando mantenimiento automático");
+            mostrarToast("🔄 Mantenimiento automático: Reconectando...");
+            
+            const miIdActual = miId;
+            const idDestinoActual = idDestino;
+            
+            if (dataConnection) { try { dataConnection.close(); } catch(e) {} dataConnection = null; }
+            if (llamada) { try { llamada.close(); } catch(e) {} llamada = null; }
+            if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+            conectado = false; hablando = false;
+            
+            actualizarEstadoConexion("🔄 Auto-reconectando...", 'amarillo');
+            const pttBtn = document.getElementById('ptt');
+            if(pttBtn) pttBtn.classList.add('disabled');
+            
+            setTimeout(() => { 
+                if (miIdActual && idDestinoActual) {
+                    conectarPeer(miIdActual, idDestinoActual);
+                    setTimeout(() => {
+                        registrarActividad();
+                        reconexionProgramada = false;
+                        mostrarToast('✅ Auto-reconexión completada');
+                    }, 2000);
+                } else {
+                    configurarIDs();
+                }
+            }, 1000);
+        }
+        
+        function limpiezaTotal() {
+            autoMantenimientoActivo = false;
+            mostrarToast("🧹 Limpieza manual...");
+            
+            if (dataConnection) { try { dataConnection.close(); } catch(e) {} dataConnection = null; }
+            if (llamada) { try { llamada.close(); } catch(e) {} llamada = null; }
+            if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
+            if (stream) { try { stream.getTracks().forEach(t => { t.stop(); t.enabled = false; }); } catch(e) {} stream = null; }
+            if (audio) { try { audio.pause(); audio.srcObject = null; } catch(e) {} audio = null; }
+            conectado = false; hablando = false;
+            
+            manosLibresActivo = false;
+            const btnManos = document.getElementById('manosLibresBtn');
+            if(btnManos) {
+                btnManos.classList.remove('activo');
+                btnManos.innerHTML = '🔊 MANOS LIBRES';
+            }
+            
+            actualizarUI();
+            detenerSonidoFantasma();
+            
+            actualizarEstadoConexion("🧹 Limpiado manualmente. Reconectando...", 'amarillo');
+            const pttBtn = document.getElementById('ptt');
+            if(pttBtn) pttBtn.classList.add('disabled');
+            
+            setTimeout(() => { 
+                if (miId && idDestino) conectarPeer(miId, idDestino); 
+                else configurarIDs();
+                setTimeout(() => {
+                    autoMantenimientoActivo = true;
+                    registrarActividad();
+                }, 1000);
+            }, 1000);
+        }
+        
+        function configurarIDs() {
+            autoMantenimientoActivo = false;
+            let nuevoMi = prompt("🎭 Tu ID (único, compártelo con tu amigo):", miId || "user" + Math.floor(Math.random()*10000));
+            if (!nuevoMi) { autoMantenimientoActivo = true; return; }
+            let nuevoOtro = prompt("👥 ID de tu amigo (el que él te compartió):", idDestino || "");
+            if (!nuevoOtro) { autoMantenimientoActivo = true; return; }
+            if (nuevoMi.trim() === nuevoOtro.trim()) { 
+                mostrarToast("⚠️ Los IDs deben ser diferentes"); 
+                autoMantenimientoActivo = true; 
+                return; 
+            }
+            conectarPeer(nuevoMi.trim(), nuevoOtro.trim());
+            setTimeout(() => { autoMantenimientoActivo = true; registrarActividad(); }, 1000);
+        }
+        
+        function toggleModo() {
+            if (modoActual === "voz") {
+                cambiarAVozManual();
+            } else {
+                modoActual = "voz";
+                const btnVoz = document.getElementById('btnVoz');
+                const btnTexto = document.getElementById('btnTexto');
+                const pttDiv = document.getElementById('ptt');
+                const panelChat = document.getElementById('panelChat');
+                
+                if(btnVoz) btnVoz.style.background = '#2ed573';
+                if(btnTexto) btnTexto.style.background = '#1e1e2a';
+                if(pttDiv) pttDiv.style.display = 'flex';
+                if(panelChat) panelChat.style.display = 'none';
+                mostrarToast(`🎤 Cambiado a modo voz`);
+            }
+            registrarActividad();
+        }
+        
+        function actualizarContador() {
+            if (!autoMantenimientoActivo || reconexionProgramada || reconectando) {
+                const countdownSpan = document.getElementById('countdownTimer');
+                if(countdownSpan) countdownSpan.innerHTML = '--:--';
+                return;
+            }
+            
+            const ahora = Date.now();
+            const inactivo = (ahora - ultimaActividad) / 1000;
+            
+            if (inactivo >= segundosParaReconexion && !reconexionProgramada && conectado) {
+                reconexionProgramada = true;
+                const autoSpan = document.getElementById('autoStatusText');
+                if(autoSpan) {
+                    autoSpan.innerHTML = 'RECONECTANDO...';
+                    autoSpan.style.color = '#ffa502';
+                }
+                mostrarToast('🔄 Inactividad detectada - Reconectando automáticamente...');
+                limpiezaTotalAutomatica();
+            } else if (inactivo < segundosParaReconexion && !reconexionProgramada) {
+                const segundosRestantes = Math.ceil(segundosParaReconexion - inactivo);
+                const minutos = Math.floor(segundosRestantes / 60);
+                const segundos = segundosRestantes % 60;
+                const countdownSpan = document.getElementById('countdownTimer');
+                if(countdownSpan) {
+                    countdownSpan.innerHTML = `${minutos}:${segundos.toString().padStart(2,'0')}`;
+                    
+                    if (segundosRestantes <= 10) {
+                        countdownSpan.style.color = '#ff4757';
+                        const autoSpan = document.getElementById('autoStatusText');
+                        if(autoSpan) autoSpan.style.color = '#ffa502';
+                    } else if (segundosRestantes <= 30) {
+                        countdownSpan.style.color = '#ffa502';
+                    } else {
+                        countdownSpan.style.color = '#2ed573';
+                    }
+                }
+            }
+        }
+        
+        function iniciarMonitoreoInactividad() {
+            intervaloInactividad = setInterval(() => {
+                actualizarContador();
+            }, 1000);
+        }
+        
+        function capturarActividadGlobal() {
+            const elementos = ['click', 'touchstart', 'mousedown', 'keypress', 'keydown'];
+            elementos.forEach(evento => {
+                document.body.addEventListener(evento, registrarActividad, true);
+            });
+            const chatInput = document.getElementById('mensajeInput');
+            if (chatInput) {
+                chatInput.addEventListener('focus', registrarActividad);
+                chatInput.addEventListener('input', registrarActividad);
+            }
+        }
+        
+        // ============ EVENT LISTENERS ============
+        function initEventListeners() {
+            const cambiarBtn = document.getElementById('cambiarBtn');
+            const modoBtn = document.getElementById('modoBtn');
+            const limpiarBtn = document.getElementById('limpiarBtn');
+            const enviarBtn = document.getElementById('enviarBtn');
+            const mensajeInput = document.getElementById('mensajeInput');
+            const btnVoz = document.getElementById('btnVoz');
+            const btnTexto = document.getElementById('btnTexto');
+            const llamarBtn = document.getElementById('llamarBtn');
+            const manosLibresBtn = document.getElementById('manosLibresBtn');
+            
+            if(cambiarBtn) cambiarBtn.onclick = configurarIDs;
+            if(modoBtn) modoBtn.onclick = toggleModo;
+            if(limpiarBtn) limpiarBtn.onclick = limpiezaTotal;
+            if(enviarBtn) enviarBtn.onclick = enviarMensajeTexto;
+            if(mensajeInput) mensajeInput.onkeypress = (e) => { if (e.key === 'Enter') enviarMensajeTexto(); };
+            if(btnVoz) btnVoz.onclick = () => cambiarModo('voz');
+            if(btnTexto) btnTexto.onclick = () => cambiarModo('texto');
+            if(llamarBtn) llamarBtn.onclick = enviarLlamada;
+            if(manosLibresBtn) manosLibresBtn.onclick = toggleManosLibres;
+            
+            // PTT
+            const ptt = document.getElementById('ptt');
+            if(ptt) {
+                let isPressed = false;
+                
+                const startTalk = async () => {
+                    if (!conectado) {
+                        mostrarToast('⚠️ Espera a estar conectado');
+                        return;
+                    }
+                    if (!hablando && !isPressed) {
+                        isPressed = true;
+                        if(await iniciarLlamada()) {
+                            hablando = true;
+                            ptt.style.background = 'radial-gradient(#ff4757,#c0392b)';
+                            ptt.innerHTML = '🎤<br>HABLANDO';
+                            registrarActividad();
+                        } else {
+                            isPressed = false;
+                        }
+                    }
+                };
+                
+                const stopTalk = () => {
+                    if (hablando && isPressed) {
+                        detenerLlamada();
+                        hablando = false;
+                        ptt.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                        ptt.innerHTML = '🎤<br>MANTÉN PTT';
+                        registrarActividad();
+                    }
+                    isPressed = false;
+                };
+                
+                ptt.onmousedown = startTalk;
+                ptt.onmouseup = stopTalk;
+                ptt.onmouseleave = stopTalk;
+                ptt.ontouchstart = (e) => { e.preventDefault(); startTalk(); };
+                ptt.ontouchend = (e) => { e.preventDefault(); stopTalk(); };
+                ptt.ontouchcancel = (e) => { e.preventDefault(); stopTalk(); };
+            }
+        }
+        
+        // ============ INICIALIZACIÓN ============
+        async function init() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getAudioTracks().forEach(t => t.enabled = false);
+                console.log("✅ Micrófono listo para conexiones externas");
+            } catch(e) {
+                console.log("⚠️ Sin permiso de micrófono, solo texto disponible:", e);
+            }
+            
+            initEventListeners();
+            iniciarMonitoreoInactividad();
+            capturarActividadGlobal();
+            registrarActividad();
+            
+            const conexionInfo = document.getElementById('conexionInfo');
+            if(conexionInfo) {
+                conexionInfo.innerHTML = '🌍 Usando servidores internacionales - Esperando configuración...';
+            }
+            
+            setTimeout(configurarIDs, 500);
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>
